@@ -1,10 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export enum Group {
-    Unknown,
-    Client,
-    Raiser,
-    Staff
+    Client = "client",
+    Raiser = "raiser",
+    Staff = "staff"
 };
 
 // Define a type for the slice state
@@ -14,7 +13,7 @@ export interface GroupState {
 
 // Define the initial state using that type
 const initialState: GroupState = {
-  value: Group.Unknown
+  value: Group.Client
 } as GroupState;
 
 export const GroupSlice = createSlice({
@@ -23,7 +22,7 @@ export const GroupSlice = createSlice({
   initialState,
   reducers: {
     setGroup: (state, action: PayloadAction<Group>) => {
-      state.value = action.payload
+      state.value = action.payload;
     }
   }
 });

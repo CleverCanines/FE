@@ -22,6 +22,8 @@ export default function TabLayout() {
 function TabLayoutContent() {
   const colorScheme = useColorScheme();
   const dispatch = useAppDispatch();
+  const group = groupInfo.getState().group.value;
+  const groupColor = Colors[group];
 
   return (
     <Tabs
@@ -37,7 +39,7 @@ function TabLayoutContent() {
               router.navigate("/");
             }}
           >
-            <Ionicons name="person" size={30} color={Colors[colorScheme ?? 'light'].tint} />
+            <Ionicons name="person" size={30} color={groupColor} />
           </Pressable>
         ),
       }}
