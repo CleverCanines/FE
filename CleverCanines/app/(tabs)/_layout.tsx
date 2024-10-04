@@ -10,6 +10,7 @@ import { Colors } from '@/constants/Colors';
 import { Tabs } from 'expo-router';
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function TabLayout() {
   return (
@@ -20,21 +21,27 @@ export default function TabLayout() {
 }
 
 function TabLayoutContent() {
-  const colorScheme = useColorScheme();
   const dispatch = useAppDispatch();
   const group = groupInfo.getState().group.value;
-  const groupColor = Colors[group];
+  const groupColor = Colors[group].color;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: useThemeColor({ light: Colors.light.tint, dark: Colors.dark.tint }, 'tint'),
+        tabBarStyle: {
+          backgroundColor: useThemeColor({ light: Colors.light.background, dark: Colors.dark.background }, 'background'),
+        },
+        headerStyle: {
+          backgroundColor: useThemeColor({ light: Colors.light.background, dark: Colors.dark.background }, 'background'),
+        },
         headerShown: true,
         headerRight: () => (
           <Pressable
+            style={{ marginRight: 10 }}
             onPress={() => {
               // Update groupInfo store
-              dispatch(setGroup(Group.Unknown));
+              dispatch(setGroup(Group.Client));
               // Navigate to login screen (on index)
               router.navigate("/");
             }}
@@ -47,46 +54,82 @@ function TabLayoutContent() {
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Home',
+          headerTitle() {
+            return (
+              <ThemedText>Home</ThemedText>
+            );
+          },
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+            <TabBarIcon 
+            name={focused ? 'home' : 'home-outline'} 
+            color={ focused ? groupColor : color } 
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="lessons"
         options={{
-          title: 'Lessons',
+          headerTitle() {
+            return (
+              <ThemedText>Lessons</ThemedText>
+            );
+          },
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'git-network' : 'git-network-outline'} color={color} />
+            <TabBarIcon 
+            name={focused ? 'git-network' : 'git-network-outline'} 
+            color={ focused ? groupColor : color } 
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
-          title: 'Events',
+          headerTitle() {
+            return (
+              <ThemedText>Events</ThemedText>
+            );
+          },
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'calendar' : 'calendar-outline'} color={color} />
+            <TabBarIcon 
+            name={focused ? 'calendar' : 'calendar-outline'} 
+            color={ focused ? groupColor : color } 
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="sitting"
         options={{
-          title: 'Puppy Sitting',
+          href: group === Group.Raiser ? '/(tabs)/sitting' : null,
+          headerTitle() {
+            return (
+              <ThemedText>Sitting</ThemedText>
+            );
+          },
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'paw' : 'paw-outline'} color={color} />
+            <TabBarIcon 
+            name={focused ? 'paw' : 'paw-outline'} 
+            color={ focused ? groupColor : color } 
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="faq"
         options={{
-          title: 'FAQ',
+          headerTitle() {
+            return (
+              <ThemedText>FAQ</ThemedText>
+            );
+          },
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'help-circle' : 'help-circle-outline'} color={color} />
-          ),
+            <TabBarIcon 
+            name={focused ? 'help-circle' : 'help-circle-outline'} 
+            color={ focused ? groupColor : color } 
+            />
+          )
         }}
       />
     </Tabs>

@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { ThemedText } from './ThemedText';
 import LessonButton from './LessonButton';
+import { useRouter } from 'expo-router';
 
 type Lesson = {
   orderIndex: number,
@@ -13,18 +14,32 @@ type Lesson = {
 };
 
 export default function LessonWeekContainer(LessonContainerProps: { lessons: Lesson[] }) {
-  const progress = 55;
+  const router = useRouter();
+  
+  const progress = 55; // TODO: get progress from user interaction tables once they are implemented
+
   const { lessons } = LessonContainerProps;
   return (
-    <div>
+    <>
       {lessons[0].lessonWeek !== 1 ? <hr style={styles.hrLine}/> : null}
       <ThemedText style={styles.weekText} >Week {lessons[0].lessonWeek}</ThemedText>
       {lessons.map((lesson) => (
         <React.Fragment key={lesson.id}>
-          <LessonButton title={lesson.title} progress={progress} onPress={() => {}} />
+          <LessonButton 
+          title={lesson.title} 
+          progress={progress} 
+          onPress={() => {
+            router.push({ 
+              pathname: '/tasks', 
+              params: { 
+                lessonId: lesson.id, 
+                title: lesson.title
+              } 
+            });
+          }} />
         </React.Fragment>
       ))}    
-    </div>
+    </>
   );
 }
 

@@ -1,6 +1,6 @@
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
-import { Pressable } from "react-native";
+import StandardButton from "@/components/StandardButton"; // Assuming StandardButton is defined here
 import { useAppDispatch } from "@/hooks/groupHooks";
 import { Group, setGroup } from "@/features/groupInfo/groupInfoSlice";
 import { router } from "expo-router";
@@ -20,34 +20,33 @@ function LoginScreenContent() {
 
   return (
     <ThemedView>
-      <ThemedText>Who are you?</ThemedText>
-      <Pressable 
+      <StandardButton
+        title="Client"
+        group={Group.Client}
         onPress={() => {
           console.log("Client");
           dispatch(setGroup(Group.Client));
           router.navigate("/(tabs)/home");
         }}
-      >
-        <ThemedText>Client</ThemedText>
-      </Pressable>
-      <Pressable 
+      />
+      <StandardButton 
+        title="Raiser"
+        group={Group.Raiser}
         onPress={() => {
           console.log("Raiser");
           dispatch(setGroup(Group.Raiser));
           router.navigate("/(tabs)/home");
         }}
-      >
-        <ThemedText>Raiser</ThemedText>
-      </Pressable>
-      <Pressable 
+      />
+      <StandardButton 
+        title="Staff"
+        group={Group.Staff}
         onPress={() => {
           console.log("Staff");
           dispatch(setGroup(Group.Staff));
           router.navigate("/(tabs)/home");
         }}
-      >
-        <ThemedText>Staff</ThemedText>
-      </Pressable>
+      />
     </ThemedView>
   );
 }

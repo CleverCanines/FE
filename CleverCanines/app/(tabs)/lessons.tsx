@@ -23,22 +23,15 @@ export default function LessonScreen() {
     // Retrieve the lesson_type from the groupInfo store
     const lesson_type = groupInfo.getState().group.value;
 
-    console.log("querying for lesson type: ", lesson_type);
     // Get lessons from server for the current group
     const { loading, error, data } = useQuery(GET_LESSONS_BY_LESSON_TYPE, {
         client: client,
         variables: { lesson_type: lesson_type },
     });
-    
-    console.log("data: ", data);
-    console.log("error: ", error);
-    console.log("loading: ", loading);
 
     if (loading) return <ThemedText>Loading...</ThemedText>;
     if (error) return <ThemedText>Error: {error.message}</ThemedText>;
     let lessons = data.getLessonsByLessonType;
-
-    console.log("lessons: ", lessons);
     
     interface Lesson {
         description: string;
@@ -60,8 +53,6 @@ export default function LessonScreen() {
     });
 
     lessonWeeks = lessonWeeks.filter((week) => week.length > 0);
-
-    console.log("lessonWeeks: ", lessonWeeks);
 
     return (
         <ThemedView>
