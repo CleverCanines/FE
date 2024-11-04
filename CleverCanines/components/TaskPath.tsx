@@ -8,7 +8,7 @@ import React from "react";
 
 export default function TaskPath(props: { fill: boolean, left?: boolean}) {
   const { fill, left } = props;
-  const group = groupInfo.getState().group.value;
+  const group = groupInfo.getState().group.group;
   const color =  fill ? Colors[group].color : useThemeColor({ light: Colors.light.tint, dark: Colors.dark.tint }, 'tint');
   
   return (

@@ -3,7 +3,7 @@ import { Provider } from 'react-redux';
 import { groupInfo } from "@/stores/groupInfo";
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAppDispatch } from "@/hooks/groupHooks";
-import { Group, setGroup } from "@/features/groupInfo/groupInfoSlice";
+import { Group, setGroup, SetGroupPayload } from "@/features/groupInfo/groupInfoSlice";
 import { ThemedText } from "@/components/ThemedText";
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
@@ -22,7 +22,7 @@ export default function TabLayout() {
 
 function TabLayoutContent() {
   const dispatch = useAppDispatch();
-  const group = groupInfo.getState().group.value;
+  const group = groupInfo.getState().group.group;
   const groupColor = Colors[group].color;
 
   return (
@@ -41,7 +41,7 @@ function TabLayoutContent() {
             style={{ marginRight: 10 }}
             onPress={() => {
               // Update groupInfo store
-              dispatch(setGroup(Group.Client));
+              dispatch(setGroup({ group: Group.Client, id: "" } as SetGroupPayload));
               // Navigate to login screen (on index)
               router.navigate("/");
             }}

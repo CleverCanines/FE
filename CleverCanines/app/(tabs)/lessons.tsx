@@ -8,7 +8,7 @@ import React from "react";
 
 export default function LessonScreen() {
     const GET_LESSONS_BY_LESSON_TYPE = gql`
-        query getLessonsByLessonType($lesson_type: LessonType!) {
+        query getLessonsByLessonType($lesson_type: LessonType!, $personId: ID = "") {
             getLessonsByLessonType(lesson_type: $lesson_type) {
                 description
                 id
@@ -17,21 +17,28 @@ export default function LessonScreen() {
                 orderIndex
                 title
             }
+            getLessonInteractionsByPersonId(personId: $personId) {
+                lessonId
+                personId
+                progress
+            }
         }
     `;
 
-    // Retrieve the lesson_type from the groupInfo store
-    const lesson_type = groupInfo.getState().group.value;
+    // Retrieve the lesson_type and personId from the groupInfo store
+    const lesson_type = groupInfo.getState().group.group;
+    const personId = groupInfo.getState().group.id;
 
     // Get lessons from server for the current group
     const { loading, error, data } = useQuery(GET_LESSONS_BY_LESSON_TYPE, {
         client: client,
-        variables: { lesson_type: lesson_type },
+        variables: { lesson_type: lesson_type, personId: personId },
     });
 
     if (loading) return <ThemedText>Loading...</ThemedText>;
     if (error) return <ThemedText>Error: {error.message}</ThemedText>;
     let lessons = data.getLessonsByLessonType;
+    let interactions = data.getLessonInteractionsByPersonId;
     
     interface Lesson {
         description: string;
@@ -58,7 +65,7 @@ export default function LessonScreen() {
         <ThemedView>
             {lessonWeeks.map((lessons) => (  
                 <React.Fragment key={`week-${lessons[0].lessonWeek}`}>
-                    <LessonWeekContainer lessons={lessons} />
+                    <LessonWeekContainer lessons={lessons} interactions={interactions} />
                 </React.Fragment>
             ))}
         </ThemedView>

@@ -7,7 +7,7 @@ import { Group } from "@/features/groupInfo/groupInfoSlice";
 
 export default function StandardButton(props: { title: string, group?: Group, onPress: () => void }) {
     const { title, onPress } = props;
-    const group = props.group || groupInfo.getState().group.value;
+    const group = props.group || groupInfo.getState().group.group;
     const groupColor = Colors[group];
 
     return (

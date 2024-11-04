@@ -3,10 +3,11 @@ import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import StandardButton from '@/components/StandardButton';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery, gql, useMutation } from '@apollo/client';
 import { client } from '../../apolloClient';
 import { ThemedView } from '@/components/ThemedView';
 import { Image } from 'react-native';
+import { groupInfo } from '@/stores/groupInfo';
 
 const GET_SCREENS_BY_TASK = gql`
     query GetScreensForTask($taskId: ID!) {
@@ -22,15 +23,29 @@ const GET_SCREENS_BY_TASK = gql`
     }
 `;
 
+const SET_SCREEN_DONE = gql`
+    mutation ScreenComplete($personId: ID!, $screenId: ID!) {
+        addScreenInteraction(complete: true, personId: $personId, screenId: $screenId) {
+            complete
+            personId
+            screenId
+        }
+    }
+`;
+
 export default function ScreenScreen() {
     // get the task we want to display the screens for
     const taskId = useLocalSearchParams().taskId;
     const router = useRouter();
-
+    const personId = groupInfo.getState().group.id;
     // Get screens from server for the current task
     const { loading, error, data } = useQuery(GET_SCREENS_BY_TASK, {
         client: client,
         variables: { taskId: taskId },
+    });
+
+    const [setScreenDone] = useMutation(SET_SCREEN_DONE, {
+        client: client,
     });
 
     const [index, setIndex] = useState(0);
@@ -67,6 +82,16 @@ export default function ScreenScreen() {
         return <ThemedText>Loading...</ThemedText>;
     }
 
+    const handleNext = async () => {
+        console.log("setting screen done");
+        setScreenDone({ variables: { personId: personId, screenId: screens[index].id } });
+        if (index < numScreens - 1) {
+            setIndex(index + 1);
+        } else {
+            router.back();
+        }
+    };
+
     // Display one screen at a time, with a StandardButton to go to the next screen
     return (
         <ThemedView>
@@ -91,8 +116,7 @@ export default function ScreenScreen() {
                             style={styles.video}
                             src={screens[index].videoUrl} 
                             title="Video player"  
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            referrerPolicy="strict-origin-when-cross-origin" 
+                            allow="web-share" 
                             allowFullScreen
                         ></iframe>
                     </>
@@ -101,13 +125,7 @@ export default function ScreenScreen() {
             </View>
             <View style={styles.Button}>
                 { index === 0 ? null : <StandardButton title="Back" onPress={() => setIndex(index - 1)} />}
-                <StandardButton title={buttonTextRight} onPress={() => {
-                    if (index < numScreens - 1) {
-                        setIndex(index + 1);
-                    } else {
-                        router.back();
-                    }
-                }} />
+                <StandardButton title={buttonTextRight} onPress={handleNext} />
             </View>
         </ThemedView>
     );

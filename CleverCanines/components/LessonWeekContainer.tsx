@@ -13,12 +13,16 @@ type Lesson = {
   title: string
 };
 
-export default function LessonWeekContainer(LessonContainerProps: { lessons: Lesson[] }) {
-  const router = useRouter();
-  
-  const progress = 55; // TODO: get progress from user interaction tables once they are implemented
+type LessonInteraction = {
+  lessonId: string,
+  personId: string,
+  progress: number
+};
 
-  const { lessons } = LessonContainerProps;
+export default function LessonWeekContainer(LessonContainerProps: { lessons: Lesson[], interactions: LessonInteraction[] }) {
+  const router = useRouter();
+
+  const { lessons, interactions } = LessonContainerProps;
   return (
     <>
       {lessons[0].lessonWeek !== 1 ? <hr style={styles.hrLine}/> : null}
@@ -27,7 +31,7 @@ export default function LessonWeekContainer(LessonContainerProps: { lessons: Les
         <React.Fragment key={lesson.id}>
           <LessonButton 
           title={lesson.title} 
-          progress={progress} 
+          progress={interactions.find((interaction) => interaction.lessonId === lesson.id)?.progress || 0}
           onPress={() => {
             router.push({ 
               pathname: '/tasks', 

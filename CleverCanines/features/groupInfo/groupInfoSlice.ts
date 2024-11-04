@@ -8,21 +8,29 @@ export enum Group {
 
 // Define a type for the slice state
 export interface GroupState {
-  value: Group
+  group: Group
+  id: string
 };
 
 // Define the initial state using that type
 const initialState: GroupState = {
-  value: Group.Client
+  group: Group.Client,
+  id: ""
 } as GroupState;
+
+export interface SetGroupPayload {
+  group: Group;
+  id: string;
+}
 
 export const GroupSlice = createSlice({
   name: 'group',
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {
-    setGroup: (state, action: PayloadAction<Group>) => {
-      state.value = action.payload;
+    setGroup: (state, action: PayloadAction<SetGroupPayload>) => {
+      state.group = action.payload.group
+      state.id = action.payload.id
     }
   }
 });

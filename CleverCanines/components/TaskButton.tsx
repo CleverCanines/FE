@@ -7,7 +7,7 @@ import { Colors } from "@/constants/Colors";
 
 export default function TaskButton(props: { title: string, progress: number, onPress: () => void }) {
   const { title, progress,  onPress} = props;
-  const group = groupInfo.getState().group.value;
+  const group = groupInfo.getState().group.group;
   const backgroundColor = Colors[group].color;
   return (
     <Pressable onPress={onPress} style={[styles.TaskButton, { backgroundColor }]}>
