@@ -1,73 +1,125 @@
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import LessonWeekContainer from "@/components/LessonWeekContainer";
-import { client } from "@/apolloClient";
-import { gql, useQuery } from "@apollo/client";
-import { groupInfo } from "@/stores/groupInfo";
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { useQuery, gql } from '@apollo/client';
+import { client } from '@/apolloClient';
+import { groupInfo } from '@/stores/groupInfo';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+import LessonWeekContainer from '@/components/LessonWeekContainer';
 
-export default function LessonScreen() {
-    const GET_LESSONS_BY_LESSON_TYPE = gql`
-        query getLessonsByLessonType($lesson_type: LessonType!, $personId: ID = "") {
-            getLessonsByLessonType(lesson_type: $lesson_type) {
-                description
-                id
-                lessonType
-                lessonWeek
-                orderIndex
-                title
-            }
-            getLessonInteractionsByPersonId(personId: $personId) {
-                lessonId
-                personId
-                progress
-            }
+const GET_LESSONS_BY_LESSON_TYPE = gql`
+    query getLessonsByLessonType($lesson_type: LessonType!, $personId: ID = "") {
+        getLessonsByLessonType(lesson_type: $lesson_type) {
+            description
+            id
+            lessonType
+            lessonWeek
+            orderIndex
+            title
         }
-    `;
+        getLessonInteractionsByPersonId(personId: $personId) {
+            lessonId
+            personId
+            progress
+        }
+    }
+`;
 
+// define the lesson type (matches backend and gql schema)
+interface Lesson {
+    description: string;
+    id: string;
+    lessonType: string;
+    lessonWeek: number;
+    orderIndex: number;
+    title: string;
+} 
+
+const LessonsScreen = () => {
     // Retrieve the lesson_type and personId from the groupInfo store
     const lesson_type = groupInfo.getState().group.group;
     const personId = groupInfo.getState().group.id;
 
-    // Get lessons from server for the current group
-    const { loading, error, data } = useQuery(GET_LESSONS_BY_LESSON_TYPE, {
-        client: client,
+    // State for lesson data and interactions
+    const [lessonData, setLessonData] = useState([]);
+    const [interactions, setInteractions] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Use the useQuery hook to fetch lessons and interactions
+    const { loading, error, data, refetch } = useQuery(GET_LESSONS_BY_LESSON_TYPE, {
         variables: { lesson_type: lesson_type, personId: personId },
+        client: client,
     });
 
-    if (loading) return <ThemedText>Loading...</ThemedText>;
-    if (error) return <ThemedText>Error: {error.message}</ThemedText>;
-    let lessons = data.getLessonsByLessonType;
-    let interactions = data.getLessonInteractionsByPersonId;
-    
-    interface Lesson {
-        description: string;
-        id: string;
-        lessonType: string;
-        lessonWeek: number;
-        orderIndex: number;
-        title: string;
-    }
+    useEffect(() => {
+        if (data) {
+            setLessonData(data.getLessonsByLessonType);
+            setInteractions(data.getLessonInteractionsByPersonId);
+        }
+    }, [data]);
 
+    const onRefresh = () => {
+        console.log('Refreshing...');
+        setRefreshing(true);
+        refetch().then(() => {
+            setRefreshing(false);
+        });
+    };
+
+    if (loading) return (
+        <ThemedView>
+            <ThemedText>Loading Lesson Data...</ThemedText>
+        </ThemedView>
+    );
+    if (error) return (
+        <ThemedView>
+            <ThemedText>Error fetching lesson data</ThemedText>
+            <ThemedText>Error: {error.message}</ThemedText>
+        </ThemedView>
+    );
+
+    // Group lessons by week
     type LessonWeeks = Lesson[][];
 
-    // Group lessons by lesson week (max amount of weeks is 128)
-    let lessonWeeks: LessonWeeks = new Array(128).fill(null).map(() => []);
+    // Group lessons by week (max amount of weeks is 256)
+    let lessonWeeks: LessonWeeks = Array.from({ length: 256 }, () => []);
     let currentWeekLessons: Lesson[] = [];
 
-    lessons.forEach((lesson: Lesson) => {
+    lessonData.forEach((lesson: Lesson) => {
         lessonWeeks[lesson.lessonWeek].push(lesson);
     });
 
+    // Remove empty weeks
     lessonWeeks = lessonWeeks.filter((week) => week.length > 0);
 
     return (
-        <ThemedView>
-            {lessonWeeks.map((lessons) => (  
-                <React.Fragment key={`week-${lessons[0].lessonWeek}`}>
-                    <LessonWeekContainer lessons={lessons} interactions={interactions} />
-                </React.Fragment>
-            ))}
-        </ThemedView>
+        <ScrollView
+            contentContainerStyle={styles.container}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+            <ThemedView>
+                {refreshing && <ThemedText>Refreshing...</ThemedText>}
+                {lessonWeeks.map((lessonData) => (  
+                    <React.Fragment key={`week-${lessonData[0].lessonWeek}`}>
+                        <LessonWeekContainer lessons={lessonData} interactions={interactions} />
+                    </React.Fragment>
+                ))}
+            </ThemedView>
+        </ScrollView>
     );
-}
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flexGrow: 1,
+    },
+    lessonContainer: {
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+});
+
+export default LessonsScreen;

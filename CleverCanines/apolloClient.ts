@@ -2,9 +2,10 @@ import { ApolloClient, InMemoryCache } from '@apollo/client';
 import Constants from 'expo-constants';
 
 const { manifest } = Constants;
-const uri = manifest?.debuggerHost
-  ? `http://${manifest.debuggerHost.split(':').shift()}:8080/graphql`
-  : 'http://localhost:8080/graphql'; // Fallback URL for non-Expo environments
+// The GraphQL URL
+// localhost: 'http://localhost:8080/graphql'
+// connecting via ngrok: 'https://cockatoo-precise-sponge.ngrok-free.app/graphql'
+const uri = 'https://cockatoo-precise-sponge.ngrok-free.app/graphql';
 
 export const client = new ApolloClient({
     uri: uri,

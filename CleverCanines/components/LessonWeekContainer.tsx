@@ -1,8 +1,11 @@
 import React from 'react';
+import { View } from 'react-native';
 import { StyleSheet } from 'react-native';
 import { ThemedText } from './ThemedText';
 import LessonButton from './LessonButton';
 import { useRouter } from 'expo-router';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { Colors } from '@/constants/Colors';
 
 type Lesson = {
   orderIndex: number,
@@ -23,9 +26,10 @@ export default function LessonWeekContainer(LessonContainerProps: { lessons: Les
   const router = useRouter();
 
   const { lessons, interactions } = LessonContainerProps;
+  const borderBottomColor = useThemeColor({ light: Colors.light.tint, dark: Colors.dark.tint }, 'tint');
   return (
     <>
-      {lessons[0].lessonWeek !== 1 ? <hr style={styles.hrLine}/> : null}
+      {lessons[0].lessonWeek !== 1 ? <View style={[styles.hrLine, {borderBottomColor}]}/> : null}
       <ThemedText style={styles.weekText} >Week {lessons[0].lessonWeek}</ThemedText>
       {lessons.map((lesson) => (
         <React.Fragment key={lesson.id}>
@@ -38,7 +42,7 @@ export default function LessonWeekContainer(LessonContainerProps: { lessons: Les
               params: { 
                 lessonId: lesson.id, 
                 title: lesson.title
-              } 
+              }
             });
           }} />
         </React.Fragment>
@@ -56,7 +60,7 @@ const styles = StyleSheet.create({
     margin: 10
   },
   hrLine: {
-    marginLeft: 10,
-    marginRight: 10,
+    borderBottomWidth: 1,
+    marginVertical: 10,
   }
 }); 

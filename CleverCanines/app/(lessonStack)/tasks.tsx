@@ -7,17 +7,11 @@ import { ThemedView } from "@/components/ThemedView";
 import { groupInfo } from "@/stores/groupInfo";
 import TaskButton from "@/components/TaskButton";
 import TaskPath from "@/components/TaskPath";
-import React from "react";
+import React, { useEffect } from "react";
+import { ScrollView, RefreshControl, StyleSheet } from "react-native";
 
 
-export default function TaskScreen() {
-    // get the lesson we want to display the tasks for
-    const lessonId = useLocalSearchParams().lessonId;
-    const personId = groupInfo.getState().group.id;
-    const router = useRouter();
-
-    // get the tasks for the lesson
-    const GET_TASKS_BY_LESSON = gql`
+const GET_TASKS_BY_LESSON = gql`
         query GetTasksForLesson($lessonId: ID!, $personId: ID!) {
             getTasksByLessonId(lessonId: $lessonId) {
                 description
@@ -34,49 +28,106 @@ export default function TaskScreen() {
         }
     `;
 
+// define the task interface (matches backend and gql schema)
+interface Task {
+    description: string;
+    id: string;
+    lessonId: string;
+    orderIndex: number;
+    title: string;
+}
+ // define the interaction interface (matches backend and gql schema)
+interface Interaction {
+    personId: string;
+    taskId: string;
+    progress: number;
+}
+
+
+export default function TaskScreen() {
+    // get the lesson we want to display the tasks for
+    const lessonId = useLocalSearchParams().lessonId;
+    const personId = groupInfo.getState().group.id;
+    const router = useRouter();
+
+    // states for task data and interactions
+    const [tasks, setTasks] = React.useState([]);
+    const [interactions, setInteractions] = React.useState([]);
+    const [refreshing, setRefreshing] = React.useState(false);
+
     // Get tasks from server for the current lesson
-    const { loading, error, data } = useQuery(GET_TASKS_BY_LESSON, {
+    const { loading, error, data, refetch } = useQuery(GET_TASKS_BY_LESSON, {
         client: client,
         variables: { lessonId: lessonId, personId: personId },
     });
 
-    if (loading) return <ThemedText>Loading...</ThemedText>;
-    if (error) return <ThemedText>Error: {error.message}</ThemedText>;
-    let tasks = data.getTasksByLessonId;
-    let interactions = data.getTaskInteractionsByPersonId;
+    useEffect(() => {
+        if (data) {
+            setTasks(data.getTasksByLessonId);
+            setInteractions(data.getTaskInteractionsByPersonId);
+        }
+    }, [data]);
 
-    interface Task {
-        description: string;
-        id: string;
-        lessonId: string;
-        orderIndex: number;
-        title: string;
+    const onRefresh = () => {
+        setRefreshing(true);
+        refetch().then(() => setRefreshing(false));
     }
 
-    return (
+
+    if (loading) return (
         <ThemedView>
-            {tasks.map((task: Task, index: number) => (
-                <React.Fragment key={task.id}>
-                    <TaskButton 
-                        title={task.title} 
-                        progress={(() => {
-                            let interaction = interactions.find((interaction: any) => interaction.taskId === task.id);
-                            return interaction ? interaction.progress : 0;
-                        })()} 
-                        onPress={() => {
-                        router.push({
-                            pathname: '/screen',
-                            params: {
-                                taskId: task.id,
-                                title: task.title
-                            }
-                        });
-                    }} />
-                    {index < tasks.length - 1 && (
-                        <TaskPath fill={ true } left={ index%2 === 1 } />
-                    )}
-                </React.Fragment>
-            ))}
+            <ThemedText>Loading Lesson Data...</ThemedText>
         </ThemedView>
     );
+    if (error) return (
+        <ThemedView>
+            <ThemedText>Error fetching lesson data</ThemedText>
+            <ThemedText>Error: {error.message}</ThemedText>
+        </ThemedView>
+    );
+
+    return (
+        <ScrollView
+            contentContainerStyle={styles.container}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+            <ThemedView>
+                {tasks.map((task: Task, index: number) => (
+                    <React.Fragment key={task.id}>
+                        <TaskButton 
+                            title={task.title} 
+                            progress={(() => {
+                                const interaction = interactions.find((interaction: Interaction) => interaction.taskId === task.id);
+                                return interaction ? interaction.progress : 0;
+                            })()} 
+                            onPress={() => {
+                            router.push({
+                                pathname: '/screen',
+                                params: {
+                                    taskId: task.id,
+                                    title: task.title
+                                }
+                            });
+                        }} />
+                        {index < tasks.length - 1 && (
+                            <TaskPath fill={ true } left={ index%2 === 1 } />
+                        )}
+                    </React.Fragment>
+                ))}
+            </ThemedView>
+        </ScrollView>
+    );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flexGrow: 1,
+    },
+    lessonContainer: {
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+});

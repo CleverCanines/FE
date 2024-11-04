@@ -9,6 +9,7 @@ export default function TaskButton(props: { title: string, progress: number, onP
   const { title, progress,  onPress} = props;
   const group = groupInfo.getState().group.group;
   const backgroundColor = Colors[group].color;
+  const color = 'white';
   return (
     <Pressable onPress={onPress} style={[styles.TaskButton, { backgroundColor }]}>
         <AnimatedCircularProgress
@@ -19,7 +20,7 @@ export default function TaskButton(props: { title: string, progress: number, onP
             rotation={0}
             fill={progress} 
             tintColor='gold'
-            children={() => <ThemedText>{title}</ThemedText>}
+            children={() => <ThemedText style={{color}}>{title}</ThemedText>}
         />
     </Pressable>
   );

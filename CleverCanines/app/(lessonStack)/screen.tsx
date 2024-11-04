@@ -8,6 +8,10 @@ import { client } from '../../apolloClient';
 import { ThemedView } from '@/components/ThemedView';
 import { Image } from 'react-native';
 import { groupInfo } from '@/stores/groupInfo';
+import { WebView } from 'react-native-webview';
+import { Bar }  from 'react-native-progress'
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { Colors } from '@/constants/Colors';
 
 const GET_SCREENS_BY_TASK = gql`
     query GetScreensForTask($taskId: ID!) {
@@ -38,6 +42,11 @@ export default function ScreenScreen() {
     const taskId = useLocalSearchParams().taskId;
     const router = useRouter();
     const personId = groupInfo.getState().group.id;
+
+    //screen data
+    const video = React.useRef(null);
+    const availableHeight = Dimensions.get('window').height - 220;
+    const tintColor = useThemeColor({ light: Colors.light.tint, dark: Colors.dark.tint }, 'tint');
     // Get screens from server for the current task
     const { loading, error, data } = useQuery(GET_SCREENS_BY_TASK, {
         client: client,
@@ -49,21 +58,6 @@ export default function ScreenScreen() {
     });
 
     const [index, setIndex] = useState(0);
-    const [availableHeight, setAvailableHeight] = useState(Dimensions.get('window').height - (95 + 64));
-
-    useEffect(() => {
-        const updateHeight = () => {
-            const screenHeight = Dimensions.get('window').height;
-            setAvailableHeight(screenHeight - (115 + 64));
-        };
-
-        const subscription = Dimensions.addEventListener('change', updateHeight);
-
-        // Clean up the event listener
-        return () => {
-            subscription?.remove();
-        };
-    }, []);
 
     useEffect(() => {
         if (data) {
@@ -112,20 +106,27 @@ export default function ScreenScreen() {
                 {screens[index].videoUrl && (
                     <>
                         <ThemedText style={styles.CaptionText}>Example Video:</ThemedText>
-                        <iframe 
+                        <WebView
+                            ref={video}
+                            source={{ uri: screens[index].videoUrl }}
                             style={styles.video}
-                            src={screens[index].videoUrl} 
-                            title="Video player"  
-                            allow="web-share" 
-                            allowFullScreen
-                        ></iframe>
+                        />
                     </>
                 )}
             </ScrollView>
             </View>
-            <View style={styles.Button}>
-                { index === 0 ? null : <StandardButton title="Back" onPress={() => setIndex(index - 1)} />}
-                <StandardButton title={buttonTextRight} onPress={handleNext} />
+            <View style={styles.BottomBar}>
+                <Bar 
+                    progress={(index + 1) / numScreens}
+                    width={null}
+                    color='gold'
+                    unfilledColor={tintColor}
+                    borderWidth={0}
+                />
+                <View style={styles.Button}>
+                    { index === 0 ? null : <StandardButton title="Back" onPress={() => setIndex(index - 1)} />}
+                    <StandardButton title={buttonTextRight} onPress={handleNext} />
+                </View>
             </View>
         </ThemedView>
     );
@@ -135,9 +136,12 @@ const styles = StyleSheet.create({
     scrollView: {
         flexGrow: 1
     },
+    BottomBar: {
+        padding: 10,
+    },
     Button: {
+        margin: 10,
         position: 'absolute',
-        bottom: 10, 
         alignSelf: 'center',
         flexDirection: 'row'
     },

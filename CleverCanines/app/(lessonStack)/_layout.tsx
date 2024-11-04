@@ -3,9 +3,16 @@ import { Colors } from '@/constants/Colors';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import {Stack} from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable } from 'react-native';
+import { router } from 'expo-router';
+import { groupInfo } from '@/stores/groupInfo';
+
 
 export default function _layout() {
     const title = useLocalSearchParams().title;
+    const group = groupInfo.getState().group.group;
+    const groupColor = Colors[group].color;
     return (
         <Stack
             screenOptions={{
@@ -19,6 +26,18 @@ export default function _layout() {
                         <ThemedText>{ title }</ThemedText>
                       );
                 },
+                headerLeft: () =>{
+                    return (
+                        <Pressable
+                            style={{ marginLeft: 10 }}
+                            onPress={() => {
+                                router.back();
+                            }}
+                        >
+                            <Ionicons name="arrow-back" size={30} color={groupColor} />
+                        </Pressable>
+                    );
+                }
             }}
         >
             <Stack.Screen 
