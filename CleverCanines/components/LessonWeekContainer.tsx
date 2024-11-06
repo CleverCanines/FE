@@ -22,10 +22,10 @@ type LessonInteraction = {
   progress: number
 };
 
-export default function LessonWeekContainer(LessonContainerProps: { lessons: Lesson[], interactions: LessonInteraction[] }) {
+export default function LessonWeekContainer(LessonContainerProps: { lessons: Lesson[], interactions: LessonInteraction[], unlocked: boolean }) {
   const router = useRouter();
 
-  const { lessons, interactions } = LessonContainerProps;
+  const { lessons, interactions, unlocked } = LessonContainerProps;
   const borderBottomColor = useThemeColor({ light: Colors.light.tint, dark: Colors.dark.tint }, 'tint');
   return (
     <>
@@ -36,7 +36,11 @@ export default function LessonWeekContainer(LessonContainerProps: { lessons: Les
           <LessonButton 
           title={lesson.title} 
           progress={interactions.find((interaction) => interaction.lessonId === lesson.id)?.progress || 0}
+          unlocked={unlocked}
           onPress={() => {
+            if (!unlocked) {
+              return;
+            }
             router.push({ 
               pathname: '/tasks', 
               params: { 

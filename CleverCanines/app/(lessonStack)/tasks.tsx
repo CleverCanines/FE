@@ -51,8 +51,8 @@ export default function TaskScreen() {
     const router = useRouter();
 
     // states for task data and interactions
-    const [tasks, setTasks] = React.useState([]);
-    const [interactions, setInteractions] = React.useState([]);
+    const [tasks, setTasks] = React.useState<Task[]>([]);
+    const [interactions, setInteractions] = React.useState<Interaction[]>([]);
     const [refreshing, setRefreshing] = React.useState(false);
 
     // Get tasks from server for the current lesson
@@ -100,17 +100,23 @@ export default function TaskScreen() {
                                 const interaction = interactions.find((interaction: Interaction) => interaction.taskId === task.id);
                                 return interaction ? interaction.progress : 0;
                             })()} 
+                            unlocked={index === 0 || interactions.find((interaction: Interaction) => interaction.taskId === tasks[index - 1].id)?.progress === 100}
                             onPress={() => {
-                            router.push({
-                                pathname: '/screen',
-                                params: {
-                                    taskId: task.id,
-                                    title: task.title
+                                if (index > 0 && interactions.find((interaction: Interaction) => interaction.taskId === tasks[index - 1].id)?.progress !== 100) {
+                                    return;
                                 }
-                            });
+                                router.push({
+                                    pathname: '/screen',
+                                    params: {
+                                        taskId: task.id,
+                                        title: task.title
+                                    }
+                                });
                         }} />
                         {index < tasks.length - 1 && (
-                            <TaskPath fill={ true } left={ index%2 === 1 } />
+                            <TaskPath 
+                            fill={interactions.find((interaction: Interaction) => interaction.taskId === task.id)?.progress === 100}
+                            left={ index%2 === 1 } />
                         )}
                     </React.Fragment>
                 ))}

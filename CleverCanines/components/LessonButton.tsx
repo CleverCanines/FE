@@ -6,10 +6,10 @@ import { groupInfo } from '@/stores/groupInfo';
 import { Colors } from '@/constants/Colors';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
-export default function LessonButton(props: { title: string, progress: number, onPress: () => void }) {
-  const { title, progress,  onPress} = props;
+export default function LessonButton(props: { title: string, progress: number, unlocked: boolean, onPress: () => void }) {
+  const { title, progress,  unlocked, onPress} = props;
   const group = groupInfo.getState().group.group;
-  const backgroundColor = Colors[group].color;
+  const backgroundColor = unlocked ? Colors[group].color : "grey";
   const color = 'white';
   return (
     <Pressable onPress={onPress} style={[styles.button, { backgroundColor }]}>

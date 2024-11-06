@@ -99,9 +99,19 @@ const LessonsScreen = () => {
         >
             <ThemedView>
                 {refreshing && <ThemedText>Refreshing...</ThemedText>}
-                {lessonWeeks.map((lessonData) => (  
+                {lessonWeeks.map((lessonData, weekIndex) => (  
                     <React.Fragment key={`week-${lessonData[0].lessonWeek}`}>
-                        <LessonWeekContainer lessons={lessonData} interactions={interactions} />
+                        <LessonWeekContainer 
+                            lessons={lessonData} 
+                            interactions={interactions} 
+                            unlocked={
+                                // Check if all lessons in the week before are completed
+                                weekIndex === 0 || lessonWeeks[weekIndex - 1].every((lesson) => {
+                                    const interaction = interactions.find((interaction: { lessonId: string; progress: number }) => interaction.lessonId === lesson.id) as { lessonId: string; progress: number } | undefined;
+                                    return interaction?.progress === 100;
+                                })
+                            }
+                        />
                     </React.Fragment>
                 ))}
             </ThemedView>
