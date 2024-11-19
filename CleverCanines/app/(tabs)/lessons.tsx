@@ -6,6 +6,8 @@ import { groupInfo } from '@/stores/groupInfo';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import LessonWeekContainer from '@/components/LessonWeekContainer';
+import StandardButton from '@/components/StandardButton';
+import { useRouter } from 'expo-router';
 
 const GET_LESSONS_BY_LESSON_TYPE = gql`
     query getLessonsByLessonType($lesson_type: LessonType!, $personId: ID = "") {
@@ -36,6 +38,8 @@ interface Lesson {
 } 
 
 const LessonsScreen = () => {
+    // Router to navigate to the lesson form
+    const router = useRouter();
     // Retrieve the lesson_type and personId from the groupInfo store
     const lesson_type = groupInfo.getState().group.group;
     const personId = groupInfo.getState().group.id;
@@ -72,10 +76,15 @@ const LessonsScreen = () => {
         </ThemedView>
     );
     if (error) return (
-        <ThemedView>
-            <ThemedText>Error fetching lesson data</ThemedText>
-            <ThemedText>Error: {error.message}</ThemedText>
-        </ThemedView>
+        <ScrollView
+            contentContainerStyle={styles.container}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+            <ThemedView>
+                <ThemedText>Error fetching lesson data</ThemedText>
+                <ThemedText>Error: {error.message}</ThemedText>
+            </ThemedView>
+        </ScrollView>
     );
 
     // Group lessons by week
@@ -93,6 +102,7 @@ const LessonsScreen = () => {
     lessonWeeks = lessonWeeks.filter((week) => week.length > 0);
 
     return (
+        lesson_type === 'client' || lesson_type === 'raiser' ? (
         <ScrollView
             contentContainerStyle={styles.container}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -116,6 +126,23 @@ const LessonsScreen = () => {
                 ))}
             </ThemedView>
         </ScrollView>
+        ) : (
+        <ScrollView 
+            contentContainerStyle={styles.container}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}  
+        >
+            <ThemedView>
+                <StandardButton
+                    title="Create Lesson"
+                    onPress={() => {
+                        // Navigate to the lesson form
+                        router.push('../(staffLessonStack)/lessonForm');
+                        }
+                    }
+                />
+            </ThemedView>
+        </ScrollView>
+        )
     );
 };
 

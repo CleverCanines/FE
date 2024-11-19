@@ -4,7 +4,6 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { ThemedText } from './ThemedText';
 import { groupInfo } from '@/stores/groupInfo';
 import { Colors } from '@/constants/Colors';
-import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function LessonButton(props: { title: string, progress: number, unlocked: boolean, onPress: () => void }) {
   const { title, progress,  unlocked, onPress} = props;
