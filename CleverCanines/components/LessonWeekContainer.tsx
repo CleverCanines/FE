@@ -6,21 +6,7 @@ import LessonButton from './LessonButton';
 import { useRouter } from 'expo-router';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Colors } from '@/constants/Colors';
-
-type Lesson = {
-  orderIndex: number,
-  lessonWeek: number,
-  description: string,
-  id: string,
-  lessonType: string,
-  title: string
-};
-
-type LessonInteraction = {
-  lessonId: string,
-  personId: string,
-  progress: number
-};
+import { Lesson, LessonInteraction } from '@/dataTypes/LessonTypes';
 
 export default function LessonWeekContainer(LessonContainerProps: { lessons: Lesson[], interactions: LessonInteraction[], unlocked: boolean }) {
   const router = useRouter();

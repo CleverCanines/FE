@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import { groupInfo } from "@/stores/groupInfo";
+import { groupInfo } from "@/stores/groupInfoStore";
 import { View } from "react-native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { AnimatedCircularProgress } from "react-native-circular-progress";

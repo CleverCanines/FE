@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet } from "react-native";
 import { ThemedText } from "./ThemedText";
-import { groupInfo } from "@/stores/groupInfo";
+import { groupInfo } from "@/stores/groupInfoStore";
 import { Colors } from "@/constants/Colors";
 import { Group } from "@/features/groupInfo/groupInfoSlice";
 

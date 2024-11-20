@@ -1,23 +1,35 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { TextInput, Switch, Divider, Icon, IconButton} from "react-native-paper";
 import { Dropdown } from "react-native-element-dropdown";
 import { Colors } from "@/constants/Colors";
-import { groupInfo } from "@/stores/groupInfo";
+import { groupInfo } from "@/stores/groupInfoStore";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import DragList, {DragListRenderItemInfo} from "react-native-draglist";
 import { TouchableOpacity } from "react-native";
 import StandardButton from "@/components/StandardButton";
+import { newLessonStore } from "@/stores/newLessonStore";
+import { setLesson, setTasks, setScreens } from "@/features/createLesson/newLessonSlice";
+import { Lesson, Task, Screen } from "@/dataTypes/LessonTypes";
+import { router } from "expo-router";
+import { Use } from "react-native-svg";
 
+function updateLessonStore(lesson: Lesson, tasks: Task[], screens: Screen[][]) {
+    newLessonStore.dispatch(setLesson(lesson));
+    newLessonStore.dispatch(setTasks(tasks));
+    newLessonStore.dispatch(setScreens(screens));
+}
 
 export default function lessonForm() {
+    const initialState = newLessonStore.getState().newLesson;
     // states 
     const [title, setTitle] = React.useState(""); // title of the lesson (string)
     const [type, setType] = React.useState(true); // type of the lesson (client(f) or raiser(t))
     const [week, setWeek] = React.useState(0); // week of the lesson (number)
-    const [tasks, setTasks] = React.useState(["Task 1"]); // tasks of the lesson (array of tasks)
+    const [tasks, setTasks] = React.useState(initialState.tasks); // tasks of the lesson (array of tasks)
+    const [taskTitles, setTaskTitles] = React.useState(["Task 1"]); // titles of the tasks (array of strings)
 
     //colors
     const group = groupInfo.getState().group.group;
@@ -25,6 +37,21 @@ export default function lessonForm() {
     const backgroundColor = useThemeColor({ light: Colors.light.background, dark: Colors.dark.background }, 'background');
     const textColor = useThemeColor({ light: Colors.light.text, dark: Colors.dark.text }, 'text');
     const tintColor = useThemeColor({ light: Colors.light.tint, dark: Colors.dark.tint }, 'tint');
+
+    React.useEffect(() => {
+        const unsubscribe = newLessonStore.subscribe(() => {
+            const state = newLessonStore.getState().newLesson;
+            setTitle(state.lessonInfo.title);
+            setType(state.lessonInfo.lessonType === "client");
+            setWeek(state.lessonInfo.lessonWeek);
+            setTasks(state.tasks);
+            setTaskTitles(state.tasks.map(task => task.title));
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
 
     const handleSwitchToggle = () => {
         setType(!type);
@@ -93,13 +120,21 @@ export default function lessonForm() {
             <Divider />
             <View style={styles.textRow}>
                 <DragList
-                    data={tasks}
+                    data={taskTitles}
                     keyExtractor={(item) => item}
                     onReordered={(fromIndex, toIndex) => {
                         const newTasks = [...tasks];
-                        const [removed] = newTasks.splice(fromIndex, 1);
-                        newTasks.splice(toIndex, 0, removed);
+                        const newTaskTitles = [...taskTitles];
+                        const [removed] = newTaskTitles.splice(fromIndex, 1);
+                        newTaskTitles.splice(toIndex, 0, removed);
+                        setTaskTitles(newTaskTitles);
+                        newTasks.splice(fromIndex, 1);
+                        newTasks.splice(toIndex, 0, tasks[fromIndex]);
                         setTasks(newTasks);
+                        // update the orderIndex of the tasks in the local state
+                        newTasks.forEach((task, index) => {
+                            task.orderIndex = index;
+                        });
                     }}
                     renderItem={(info: DragListRenderItemInfo<string>) => {
                         const { item, onDragStart, onDragEnd, isActive } = info;
@@ -116,6 +151,20 @@ export default function lessonForm() {
                                         size={12}
                                         mode="contained"
                                         style={{backgroundColor: groupColor}}
+                                        onPress={() => {
+                                            updateLessonStore({
+                                                description: "",
+                                                id: "",
+                                                lessonType: type ? "client" : "raiser",
+                                                lessonWeek: week,
+                                                orderIndex: 0,
+                                                title: title
+                                            }, tasks, []);
+                                            router.push({
+                                                pathname: "../taskModal", 
+                                                params: {taskIndex: JSON.stringify(taskTitles.indexOf(item))}
+                                            });
+                                        }}
                                     />
                                     <ThemedText style={{fontSize: 24}}>{item}</ThemedText>
                                     <Icon source="drag" color={tintColor} size={24} />
@@ -126,13 +175,21 @@ export default function lessonForm() {
                     }}
                 />
                 
-                {tasks.length < 10 && <StandardButton
+                {tasks.length < 8 && <StandardButton
                     title="Add Task"
                     onPress={() => {
-                        if (tasks.length >= 10) {
+                        if (tasks.length >= 8) {
                             return;
                         }
-                        setTasks([...tasks, "Task " + (tasks.length + 1)]);
+                        const newTask = {
+                            description: "",
+                            id: "",
+                            lessonId: "",
+                            orderIndex: tasks.length,
+                            title: `Task ${tasks.length + 1}`
+                        };
+                        setTasks([...tasks, newTask]);
+                        setTaskTitles([...taskTitles, newTask.title]);
                     }}
                 />}
             </View>
@@ -162,5 +219,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         marginVertical: 10,
+        alignItems: "center",
     },
 });

@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useQuery, gql } from '@apollo/client';
 import { client } from '@/apolloClient';
-import { groupInfo } from '@/stores/groupInfo';
+import { groupInfo } from '@/stores/groupInfoStore';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import LessonWeekContainer from '@/components/LessonWeekContainer';
 import StandardButton from '@/components/StandardButton';
 import { useRouter } from 'expo-router';
+import { Lesson } from '@/dataTypes/LessonTypes';
 
 const GET_LESSONS_BY_LESSON_TYPE = gql`
     query getLessonsByLessonType($lesson_type: LessonType!, $personId: ID = "") {
@@ -26,16 +27,6 @@ const GET_LESSONS_BY_LESSON_TYPE = gql`
         }
     }
 `;
-
-// define the lesson type (matches backend and gql schema)
-interface Lesson {
-    description: string;
-    id: string;
-    lessonType: string;
-    lessonWeek: number;
-    orderIndex: number;
-    title: string;
-} 
 
 const LessonsScreen = () => {
     // Router to navigate to the lesson form

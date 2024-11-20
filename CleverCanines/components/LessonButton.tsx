@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { ThemedText } from './ThemedText';
-import { groupInfo } from '@/stores/groupInfo';
+import { groupInfo } from '@/stores/groupInfoStore';
 import { Colors } from '@/constants/Colors';
 
 export default function LessonButton(props: { title: string, progress: number, unlocked: boolean, onPress: () => void }) {

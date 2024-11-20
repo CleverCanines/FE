@@ -1,6 +1,6 @@
 import { Pressable } from "react-native";
 import { Provider } from 'react-redux';
-import { groupInfo } from "@/stores/groupInfo";
+import { groupInfo } from "@/stores/groupInfoStore";
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useAppDispatch } from "@/hooks/groupHooks";
 import { Group, setGroup, SetGroupPayload } from "@/features/groupInfo/groupInfoSlice";

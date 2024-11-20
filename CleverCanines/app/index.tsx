@@ -5,7 +5,7 @@ import { useAppDispatch } from "@/hooks/groupHooks";
 import { Group, setGroup, SetGroupPayload } from "@/features/groupInfo/groupInfoSlice";
 import { router } from "expo-router";
 import { Provider } from "react-redux";
-import { groupInfo } from "@/stores/groupInfo";
+import { groupInfo } from "@/stores/groupInfoStore";
 
 export default function LoginScreen() {
   return (

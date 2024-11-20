@@ -7,7 +7,7 @@ import { useQuery, gql, useMutation } from '@apollo/client';
 import { client } from '../../apolloClient';
 import { ThemedView } from '@/components/ThemedView';
 import { Image } from 'react-native';
-import { groupInfo } from '@/stores/groupInfo';
+import { groupInfo } from '@/stores/groupInfoStore';
 import { WebView } from 'react-native-webview';
 import { Bar }  from 'react-native-progress'
 import { useThemeColor } from '@/hooks/useThemeColor';

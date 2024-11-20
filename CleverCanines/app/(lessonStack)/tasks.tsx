@@ -4,11 +4,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { client } from "../../apolloClient";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { groupInfo } from "@/stores/groupInfo";
+import { groupInfo } from "@/stores/groupInfoStore";
 import TaskButton from "@/components/TaskButton";
 import TaskPath from "@/components/TaskPath";
 import React, { useEffect } from "react";
 import { ScrollView, RefreshControl, StyleSheet } from "react-native";
+import { Task, TaskInteraction } from "@/dataTypes/LessonTypes";
 
 
 const GET_TASKS_BY_LESSON = gql`
@@ -28,22 +29,6 @@ const GET_TASKS_BY_LESSON = gql`
         }
     `;
 
-// define the task interface (matches backend and gql schema)
-interface Task {
-    description: string;
-    id: string;
-    lessonId: string;
-    orderIndex: number;
-    title: string;
-}
- // define the interaction interface (matches backend and gql schema)
-interface Interaction {
-    personId: string;
-    taskId: string;
-    progress: number;
-}
-
-
 export default function TaskScreen() {
     // get the lesson we want to display the tasks for
     const lessonId = useLocalSearchParams().lessonId;
@@ -52,7 +37,7 @@ export default function TaskScreen() {
 
     // states for task data and interactions
     const [tasks, setTasks] = React.useState<Task[]>([]);
-    const [interactions, setInteractions] = React.useState<Interaction[]>([]);
+    const [interactions, setInteractions] = React.useState<TaskInteraction[]>([]);
     const [refreshing, setRefreshing] = React.useState(false);
 
     // Get tasks from server for the current lesson
@@ -97,12 +82,12 @@ export default function TaskScreen() {
                         <TaskButton 
                             title={task.title} 
                             progress={(() => {
-                                const interaction = interactions.find((interaction: Interaction) => interaction.taskId === task.id);
+                                const interaction = interactions.find((interaction: TaskInteraction) => interaction.taskId === task.id);
                                 return interaction ? interaction.progress : 0;
                             })()} 
-                            unlocked={index === 0 || interactions.find((interaction: Interaction) => interaction.taskId === tasks[index - 1].id)?.progress === 100}
+                            unlocked={index === 0 || interactions.find((interaction: TaskInteraction) => interaction.taskId === tasks[index - 1].id)?.progress === 100}
                             onPress={() => {
-                                if (index > 0 && interactions.find((interaction: Interaction) => interaction.taskId === tasks[index - 1].id)?.progress !== 100) {
+                                if (index > 0 && interactions.find((interaction: TaskInteraction) => interaction.taskId === tasks[index - 1].id)?.progress !== 100) {
                                     return;
                                 }
                                 router.push({
@@ -115,7 +100,7 @@ export default function TaskScreen() {
                         }} />
                         {index < tasks.length - 1 && (
                             <TaskPath 
-                            fill={interactions.find((interaction: Interaction) => interaction.taskId === task.id)?.progress === 100}
+                            fill={interactions.find((interaction: TaskInteraction) => interaction.taskId === task.id)?.progress === 100}
                             left={ index%2 === 1 } />
                         )}
                     </React.Fragment>
