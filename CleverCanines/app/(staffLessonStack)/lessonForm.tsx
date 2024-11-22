@@ -30,6 +30,7 @@ export default function lessonForm() {
     const [week, setWeek] = React.useState(0); // week of the lesson (number)
     const [tasks, setTasks] = React.useState(initialState.tasks); // tasks of the lesson (array of tasks)
     const [taskTitles, setTaskTitles] = React.useState(["Task 1"]); // titles of the tasks (array of strings)
+    const [screens, setScreens] = React.useState(initialState.screens); // screens of the lesson (array of arrays of screens)
 
     //colors
     const group = groupInfo.getState().group.group;
@@ -46,6 +47,7 @@ export default function lessonForm() {
             setWeek(state.lessonInfo.lessonWeek);
             setTasks(state.tasks);
             setTaskTitles(state.tasks.map(task => task.title));
+            setScreens(state.screens);
         });
 
         return () => {
@@ -64,6 +66,7 @@ export default function lessonForm() {
     }
 
     const label = <ThemedText>Title</ThemedText>;
+    let taskCount = tasks.length;
 
     return (
         <ThemedView>
@@ -121,16 +124,20 @@ export default function lessonForm() {
             <View style={styles.textRow}>
                 <DragList
                     data={taskTitles}
-                    keyExtractor={(item) => item}
+                    keyExtractor={(item, index) => `${item}-${index}`}
                     onReordered={(fromIndex, toIndex) => {
                         const newTasks = [...tasks];
                         const newTaskTitles = [...taskTitles];
+                        const newScreens = [...screens];
                         const [removed] = newTaskTitles.splice(fromIndex, 1);
                         newTaskTitles.splice(toIndex, 0, removed);
                         setTaskTitles(newTaskTitles);
                         newTasks.splice(fromIndex, 1);
                         newTasks.splice(toIndex, 0, tasks[fromIndex]);
+                        newScreens.splice(fromIndex, 1);
+                        newScreens.splice(toIndex, 0, screens[fromIndex]);
                         setTasks(newTasks);
+                        setScreens(newScreens);
                         // update the orderIndex of the tasks in the local state
                         newTasks.forEach((task, index) => {
                             task.orderIndex = index;
@@ -140,14 +147,14 @@ export default function lessonForm() {
                         const { item, onDragStart, onDragEnd, isActive } = info;
                         return (
                             <TouchableOpacity
-                                key={item}
+                                key={`${item}-${taskTitles.indexOf(item)}`}
                                 onPressIn={onDragStart}
                                 onPressOut={onDragEnd}
                             >   
                                 <View style={styles.taskRow}>
                                 <IconButton 
                                         icon="pencil" 
-                                        iconColor={tintColor}
+                                        iconColor={"white"}
                                         size={12}
                                         mode="contained"
                                         style={{backgroundColor: groupColor}}
@@ -159,7 +166,7 @@ export default function lessonForm() {
                                                 lessonWeek: week,
                                                 orderIndex: 0,
                                                 title: title
-                                            }, tasks, []);
+                                            }, tasks, screens);
                                             router.push({
                                                 pathname: "../taskModal", 
                                                 params: {taskIndex: JSON.stringify(taskTitles.indexOf(item))}
@@ -175,8 +182,10 @@ export default function lessonForm() {
                     }}
                 />
                 
-                {tasks.length < 8 && <StandardButton
-                    title="Add Task"
+                {tasks.length < 8 && <IconButton
+                    icon="plus"
+                    iconColor={tintColor}
+                    size={24}
                     onPress={() => {
                         if (tasks.length >= 8) {
                             return;
@@ -186,10 +195,23 @@ export default function lessonForm() {
                             id: "",
                             lessonId: "",
                             orderIndex: tasks.length,
-                            title: `Task ${tasks.length + 1}`
+                            title: `Task ${taskCount + 1}`
                         };
                         setTasks([...tasks, newTask]);
                         setTaskTitles([...taskTitles, newTask.title]);
+                        // put a filler screen in the screens array for the tasks index so that Screens[taskIndex] is not undefined
+                        setScreens([...screens, 
+                            [{ 
+                            orderIndex: 0,
+                            title: "Screen 1",
+                            text: "",
+                            videoUrl: "",
+                            imageUrl: "",
+                            onlyInstruction: false,
+                            taskId: ""
+                            }]
+                        ]);
+                        taskCount = taskCount + 1;
                     }}
                 />}
             </View>

@@ -41,8 +41,8 @@ const initialState: NewLessonState = {
         orderIndex: 0,
         title: ""
     },
-    tasks: [initialTask],
-    screens: [[initialScreen]]
+    tasks: [initialTask] as Task[],
+    screens: [[initialScreen]] as Screen[][]
 } as NewLessonState;
 
 // Define the slice
