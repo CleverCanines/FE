@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import React, { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { TextInput, Switch, Divider, Icon, IconButton} from "react-native-paper";
+import { TextInput, Switch, Divider, Icon, IconButton, Portal, Dialog, PaperProvider } from "react-native-paper";
 import { Dropdown } from "react-native-element-dropdown";
 import { Colors } from "@/constants/Colors";
 import { groupInfo } from "@/stores/groupInfoStore";
@@ -11,15 +11,137 @@ import DragList, {DragListRenderItemInfo} from "react-native-draglist";
 import { TouchableOpacity } from "react-native";
 import StandardButton from "@/components/StandardButton";
 import { newLessonStore } from "@/stores/newLessonStore";
-import { setLesson, setTasks, setScreens } from "@/features/createLesson/newLessonSlice";
+import { setLesson, setTasks, setScreens, reset } from "@/features/createLesson/newLessonSlice";
 import { Lesson, Task, Screen } from "@/dataTypes/LessonTypes";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { Use } from "react-native-svg";
+import { gql, useMutation } from "@apollo/client";
+import { client } from "@/apolloClient";
+import TaskScreen from "../(lessonStack)/tasks";
 
 function updateLessonStore(lesson: Lesson, tasks: Task[], screens: Screen[][]) {
     newLessonStore.dispatch(setLesson(lesson));
     newLessonStore.dispatch(setTasks(tasks));
     newLessonStore.dispatch(setScreens(screens));
+}
+
+const ADD_LESSON = gql`
+    mutation AddLessonAndGetItsId($lesson_week: Int!, $orderIndex: Int!, $lesson_type: LessonType!, $description: String!, $title: String!) {
+    addLesson(
+        description: $description
+        lesson_type: $lesson_type
+        lesson_week: $lesson_week
+        orderIndex: $orderIndex
+        title: $title
+    ) { id }
+    }
+`;
+
+const ADD_TASK = gql`
+    mutation AddTaskAndGetItsId($title: String!, $orderIndex: Int!, $lessonId: ID!, $description: String!) {
+    addTask(
+        description: $description
+        lessonId: $lessonId
+        orderIndex: $orderIndex
+        title: $title
+    ) { id }
+    }
+`;
+
+const ADD_SCREEN = gql`
+    mutation AddScreen($imageUrl: String, $onlyInstruction: Boolean = false, $orderIndex: Int!, $taskId: ID!, $text: String!, $title: String!, $videoUrl: String) {
+    addScreen(
+        orderIndex: $orderIndex
+        taskId: $taskId
+        text: $text
+        title: $title
+        onlyInstruction: $onlyInstruction
+        imageUrl: $imageUrl
+        videoUrl: $videoUrl
+    ) { id }
+    }
+`;
+
+const saveToBackend = async (addLesson: (options: any) => Promise<any>, addTask: (options: any) => Promise<any>, addScreen: (options: any) => Promise<any>) => {
+    console.log("Saving to backend");
+    let lessonId = "";
+    let taskIds: string[] = [];
+    // save the lesson to backend
+    // get the lesson ID from the backend
+    const lesson = newLessonStore.getState().newLesson.lessonInfo;
+    addLesson({
+        variables: {
+            lesson_week: lesson.lessonWeek,
+            orderIndex: lesson.orderIndex,
+            lesson_type: lesson.lessonType,
+            description: lesson.description,
+            title: lesson.title
+        }
+    }).then(({ data }) => {
+        lessonId = data.addLesson.id;
+    }).then(() => {
+        // save the tasks to the backend
+        // get the task IDs from the backend
+        const tasks = newLessonStore.getState().newLesson.tasks;
+        tasks.forEach(task => {
+            addTask({
+                variables: {
+                    title: task.title,
+                    orderIndex: task.orderIndex,
+                    lessonId: lessonId,
+                    description: task.description
+                }
+            }).then(({ data }) => {
+                taskIds.push(data.addTask.id);
+            }).then(() => {
+                const screens = newLessonStore.getState().newLesson.screens;
+                // save the screens to the backend for this task
+                screens[tasks.indexOf(task)].forEach(screen => {
+                    addScreen({
+                        variables: {
+                            imageUrl: screen.imageUrl,
+                            onlyInstruction: screen.onlyInstruction,
+                            orderIndex: screen.orderIndex,
+                            taskId: taskIds[tasks.indexOf(task)],
+                            text: screen.text,
+                            title: screen.title,
+                            videoUrl: screen.videoUrl
+                        }
+                    }).catch(error => { console.error(error); });
+                });
+            }).catch(error => { console.error(error); });
+        });
+    }).then(() => {
+        newLessonStore.dispatch(reset());
+    }).catch(error => { console.error(error); });
+};
+
+function checkMinInfo(): [boolean, string] {
+    const state = newLessonStore.getState().newLesson;
+    const lesson = state.lessonInfo;
+    const tasks = state.tasks;
+    const screens = state.screens;
+    
+    /*
+    Lessons must have a title, type, and week
+    There must be at least one task
+        every task must have a title 
+        and at least one screen
+            every screen must have a title and text 
+    */
+    if (lesson.title === "") { return [false, "Lesson is missing a title"]; }
+    if (lesson.lessonType === "") { return [false, "Lesson is missing a type"]; }
+    if (lesson.lessonWeek === null) { return [false, "Lesson is missing a week"]; }
+    if (tasks.length === 0) { return [false, "Lesson has no tasks"]; }
+    for (let i = 0; i < tasks.length; i++) {
+        if (tasks[i].title === "") { return [false, `Task ${i + 1} is missing a title`]; }
+        if (screens[i].length === 0) { return [false, `Task ${i + 1} has no screens`]; }
+        for (let j = 0; j < screens[i].length; j++) {
+            if (screens[i][j].title === "") { return [false, `Task ${i + 1} has a screen with no title`]; }
+            if (screens[i][j].text === "") { return [false, `Task ${i + 1} has a screen with no text`]; }
+        }
+    }
+    return [true, ""];
 }
 
 export default function lessonForm() {
@@ -31,6 +153,12 @@ export default function lessonForm() {
     const [tasks, setTasks] = React.useState(initialState.tasks); // tasks of the lesson (array of tasks)
     const [taskTitles, setTaskTitles] = React.useState(["Task 1"]); // titles of the tasks (array of strings)
     const [screens, setScreens] = React.useState(initialState.screens); // screens of the lesson (array of arrays of screens)
+    const [areYouSure, setAreYouSure] = React.useState(false); // are you sure you want to leave the page (boolean)
+    
+    // backend mutators
+    const [addLesson] = useMutation(ADD_LESSON, { client: client, });
+    const [addTask] = useMutation(ADD_TASK, { client: client, });
+    const [addScreen] = useMutation(ADD_SCREEN, { client: client, });
 
     //colors
     const group = groupInfo.getState().group.group;
@@ -69,6 +197,19 @@ export default function lessonForm() {
     let taskCount = tasks.length;
 
     return (
+        <PaperProvider>
+        <Stack.Screen options={{ 
+            title: "Create a new lesson", 
+            headerLeft: () => (
+                <IconButton
+                    icon="arrow-left"
+                    iconColor={groupColor}
+                    size={24}
+                    onPress={() => setAreYouSure(true)}
+                />
+            ),
+            }}
+        />
         <ThemedView>
             <View style={styles.textRow}>
                 <TextInput
@@ -215,7 +356,43 @@ export default function lessonForm() {
                     }}
                 />}
             </View>
+            <View style={styles.textRow}>
+                <StandardButton
+                    title="Save"
+                    onPress={() => {
+                        const [valid, message] = checkMinInfo();
+                        if (!valid) {
+                            alert(message);
+                            return;
+                        }
+                        updateLessonStore({
+                            description: "",
+                            id: "",
+                            lessonType: type ? "client" : "raiser",
+                            lessonWeek: week,
+                            orderIndex: 0,
+                            title: title
+                        }, tasks, screens);
+                        saveToBackend(addLesson, addTask, addScreen);
+                        router.back();
+                    }}
+                />
+            </View>
+            <Portal>
+                <Dialog visible={areYouSure} onDismiss={() => setAreYouSure(false)}>
+                    <Dialog.Title>Are you sure you want to leave? All progress will be lost.</Dialog.Title>
+                    <Dialog.Actions>
+                        <StandardButton title="Cancel" onPress={() => setAreYouSure(false)} />
+                        <StandardButton title="Go Back" onPress={() => {
+                            setAreYouSure(false);
+                            newLessonStore.dispatch(reset());
+                            router.back();
+                        }} />
+                    </Dialog.Actions>
+                </Dialog>
+            </Portal>
         </ThemedView>
+        </PaperProvider>
     );
 }
 

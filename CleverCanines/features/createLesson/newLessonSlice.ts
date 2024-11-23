@@ -34,7 +34,7 @@ const initialScreen: Screen = {
 
 const initialState: NewLessonState = {
     lessonInfo: {
-        description: "",
+        description: "made on app",
         id: "",
         lessonType: "client",
         lessonWeek: 0,
@@ -59,11 +59,13 @@ export const newLessonSlice = createSlice({
         setScreens: (state, action: PayloadAction<Screen[][]>) => {
             state.screens = action.payload;
         },
-        setLessonType: (state, action: PayloadAction<string>) => {
-            state.lessonInfo.lessonType = action.payload;
+        reset: (state) => {
+            state.lessonInfo = initialState.lessonInfo;
+            state.tasks = initialState.tasks;
+            state.screens = initialState.screens;
         }
     }
 });
 
-export const { setLesson, setTasks, setScreens, setLessonType } = newLessonSlice.actions;
+export const { setLesson, setTasks, setScreens, reset } = newLessonSlice.actions;
 export default newLessonSlice.reducer;

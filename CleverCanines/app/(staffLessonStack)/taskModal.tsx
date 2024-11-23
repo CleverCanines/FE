@@ -41,11 +41,47 @@ export default function TaskModal() {
     const [screenVideoUrls, setScreenVideoUrls] = useState([...screens.map(screen => screen.videoUrl)]);
     const [infoToggle, setInfoToggle] = useState(false);    
 
-    const handleTitleChange = (title: string) => {
+    const handleTaskTitleChange = (title: string) => {
         const newTask = { ...task};
         newTask.title = title;
         setTask(newTask);
     };
+    const handleScreenTitleChange = (title: string, index: number) => {
+        const newTitles = [...screenTitles];
+        const newScreens = screens.map((screen, i) => 
+            i === index ? { ...screen, title } : screen
+        );
+        newTitles[index] = title;
+        setScreenTitles(newTitles);
+        setScreens(newScreens);
+    }
+    const handleScreenTextChange = (text: string, index: number) => {
+        const newTexts = [...screenTexts];
+        const newScreens = screens.map((screen, i) =>
+            i === index ? { ...screen, text } : screen
+        );
+        newTexts[index] = text;
+        setScreenTexts(newTexts);
+        setScreens(newScreens);
+    }
+    const handleScreenImageUrlChange = (imageUrl: string, index: number) => {
+        const newImageUrls = [...screenImageUrls];
+        const newScreens = screens.map((screen, i) =>
+            i === index ? { ...screen, imageUrl } : screen
+        );
+        newImageUrls[index] = imageUrl;
+        setScreenImageUrls(newImageUrls);
+        setScreens(newScreens);
+    }
+    const handleScreenVideoUrlChange = (videoUrl: string, index: number) => {
+        const newVideoUrls = [...screenVideoUrls];
+        const newScreens = screens.map((screen, i) =>
+            i === index ? { ...screen, videoUrl } : screen
+        );
+        newVideoUrls[index] = videoUrl;
+        setScreenVideoUrls(newVideoUrls);
+        setScreens(newScreens);
+    }
 
     return (
         <>
@@ -58,8 +94,14 @@ export default function TaskModal() {
                         size={20}
                         onPress={() => {
                             const newTasks = [...newLessonStore.getState().newLesson.tasks]
+                            const newScreens = [...newLessonStore.getState().newLesson.screens];
                             newTasks[taskIndex] = task;
-                            updateLessonStore(newLessonStore.getState().newLesson.lessonInfo, newTasks, newLessonStore.getState().newLesson.screens);
+                            newScreens[taskIndex] = screens;
+                            updateLessonStore(
+                                newLessonStore.getState().newLesson.lessonInfo, 
+                                newTasks, 
+                                newScreens
+                            );
                             router.back();
                         }}
                     />
@@ -83,7 +125,7 @@ export default function TaskModal() {
                     <TextInput
                         label={"Task Title"}
                         value={task.title}
-                        onChangeText={handleTitleChange}
+                        onChangeText={handleTaskTitleChange}
                         mode={'outlined'}
                         activeOutlineColor={groupColor}
                         theme={{ colors: { background: backgroundColor } }}
@@ -104,10 +146,8 @@ export default function TaskModal() {
                                 <TextInput
                                     label={"Screen Title"}
                                     value={screenTitles[index]}
-                                    onChangeText={(title) => {
-                                        const newTitles = [...screenTitles];
-                                        newTitles[index] = title;
-                                        setScreenTitles(newTitles);
+                                    onChangeText={(text: string) => {
+                                        handleScreenTitleChange(text, index);
                                     }}
                                     mode={'outlined'}
                                     activeOutlineColor={groupColor}
@@ -121,9 +161,7 @@ export default function TaskModal() {
                                     label={"Screen Text"}
                                     value={screenTexts[index]}
                                     onChangeText={(text) => {
-                                        const newTexts = [...screenTexts];
-                                        newTexts[index] = text;
-                                        setScreenTexts(newTexts);
+                                        handleScreenTextChange(text, index);
                                     }}
                                     mode={'outlined'}
                                     activeOutlineColor={groupColor}
@@ -142,9 +180,7 @@ export default function TaskModal() {
                                     label={"Screen Image URL"}
                                     value={screenImageUrls[index]}
                                     onChangeText={(imageUrl) => {
-                                        const newImageUrls = [...screenImageUrls];
-                                        newImageUrls[index] = imageUrl;
-                                        setScreenImageUrls(newImageUrls);
+                                        handleScreenImageUrlChange(imageUrl, index);
                                     }}
                                     mode={'outlined'}
                                     activeOutlineColor={groupColor}
@@ -162,9 +198,7 @@ export default function TaskModal() {
                                     label={"Screen Video URL"}
                                     value={screenVideoUrls[index]}
                                     onChangeText={(videoUrl) => {
-                                        const newVideoUrls = [...screenVideoUrls];
-                                        newVideoUrls[index] = videoUrl;
-                                        setScreenVideoUrls(newVideoUrls);
+                                        handleScreenVideoUrlChange(videoUrl, index);
                                     }}
                                     mode={'outlined'}
                                     activeOutlineColor={groupColor}
