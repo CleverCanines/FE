@@ -9,6 +9,8 @@ import LessonWeekContainer from '@/components/LessonWeekContainer';
 import StandardButton from '@/components/StandardButton';
 import { useRouter } from 'expo-router';
 import { Lesson } from '@/dataTypes/LessonTypes';
+import { newLessonStore } from '@/stores/newLessonStore';
+import { reset } from '@/features/createLesson/newLessonSlice';
 
 const GET_LESSONS_BY_LESSON_TYPE = gql`
     query getLessonsByLessonType($lesson_type: LessonType!, $personId: ID = "") {
@@ -127,6 +129,7 @@ const LessonsScreen = () => {
                     title="Create Lesson"
                     onPress={() => {
                         // Navigate to the lesson form
+                        newLessonStore.dispatch(reset());
                         router.push('../(staffLessonStack)/lessonForm');
                         }
                     }

@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import React, { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { TextInput, Switch, Divider, Icon, IconButton, Portal, Dialog, PaperProvider } from "react-native-paper";
+import { TextInput, SegmentedButtons, Divider, Icon, IconButton, Portal, Dialog, PaperProvider } from "react-native-paper";
 import { Dropdown } from "react-native-element-dropdown";
 import { Colors } from "@/constants/Colors";
 import { groupInfo } from "@/stores/groupInfoStore";
@@ -17,7 +17,6 @@ import { router, Stack } from "expo-router";
 import { Use } from "react-native-svg";
 import { gql, useMutation } from "@apollo/client";
 import { client } from "@/apolloClient";
-import TaskScreen from "../(lessonStack)/tasks";
 
 function updateLessonStore(lesson: Lesson, tasks: Task[], screens: Screen[][]) {
     newLessonStore.dispatch(setLesson(lesson));
@@ -63,7 +62,7 @@ const ADD_SCREEN = gql`
 `;
 
 const saveToBackend = async (addLesson: (options: any) => Promise<any>, addTask: (options: any) => Promise<any>, addScreen: (options: any) => Promise<any>) => {
-    console.log("Saving to backend");
+    // console.log("Saving to backend");
     let lessonId = "";
     let taskIds: string[] = [];
     // save the lesson to backend
@@ -95,8 +94,11 @@ const saveToBackend = async (addLesson: (options: any) => Promise<any>, addTask:
                 taskIds.push(data.addTask.id);
             }).then(() => {
                 const screens = newLessonStore.getState().newLesson.screens;
+                // console.log("Screens in save func: ", screens);
                 // save the screens to the backend for this task
                 screens[tasks.indexOf(task)].forEach(screen => {
+                    // console.log("here: ", screen);
+                    // console.log(taskIds[tasks.indexOf(task)]);
                     addScreen({
                         variables: {
                             imageUrl: screen.imageUrl,
@@ -111,8 +113,6 @@ const saveToBackend = async (addLesson: (options: any) => Promise<any>, addTask:
                 });
             }).catch(error => { console.error(error); });
         });
-    }).then(() => {
-        newLessonStore.dispatch(reset());
     }).catch(error => { console.error(error); });
 };
 
@@ -189,7 +189,7 @@ export default function lessonForm() {
 
     // Generate picker items 
     const pickerItems = [];
-    for (let i = 0; i <= 256; i++) {
+    for (let i = 1; i <= 256; i++) {
         pickerItems.push({ label: i.toString(), value: i.toString() });
     }
 
@@ -212,6 +212,31 @@ export default function lessonForm() {
         />
         <ThemedView>
             <View style={styles.textRow}>
+                <SegmentedButtons
+                    buttons={[
+                        { 
+                            label: "Client", 
+                            value: "client", 
+                            checkedColor: groupColor, 
+                            uncheckedColor: textColor,
+                        },
+                        { 
+                            label: "Raiser",
+                            value: "raiser", 
+                            checkedColor: groupColor, 
+                            uncheckedColor: textColor,
+                        }
+                    ]}
+                    value={type ? "client" : "raiser"}
+                    onValueChange={(value) => setType(value === "client")}
+                    theme={{ colors: { 
+                        secondaryContainer: backgroundColor,
+                        primary: groupColor,
+                    } }}
+                />
+            </View>
+            <Divider />
+            <View style={styles.textRow}>
                 <TextInput
                     label={label}
                     value={title}
@@ -220,23 +245,6 @@ export default function lessonForm() {
                     activeOutlineColor={groupColor}
                     theme={{ colors: { background: backgroundColor } }}
                     textColor={textColor}
-                />
-            </View>
-            <Divider />
-            <View style={styles.switchRow}>
-                <ThemedText>Client Lesson</ThemedText>
-                <Switch
-                    value={type}
-                    theme={{ colors: { primary: groupColor } }}
-                    onValueChange={handleSwitchToggle}
-                />
-            </View>
-            <View style={styles.switchRow}>
-                <ThemedText>Raiser Lesson</ThemedText>
-                <Switch style={{alignSelf: 'flex-end'}}
-                    value={!type}
-                    theme={{ colors: { primary: groupColor } }}
-                    onValueChange={handleSwitchToggle}
                 />
             </View>
             <Divider />
@@ -315,7 +323,22 @@ export default function lessonForm() {
                                         }}
                                     />
                                     <ThemedText style={{fontSize: 24}}>{item}</ThemedText>
-                                    <Icon source="drag" color={tintColor} size={24} />
+                                    <IconButton 
+                                        icon="trash-can" 
+                                        iconColor={tintColor} 
+                                        size={24}
+                                        onPress={() => {
+                                            const newTasks = [...tasks];
+                                            const newTaskTitles = [...taskTitles];
+                                            const newScreens = [...screens];
+                                            newTasks.splice(taskTitles.indexOf(item), 1);
+                                            newTaskTitles.splice(taskTitles.indexOf(item), 1);
+                                            newScreens.splice(taskTitles.indexOf(item), 1);
+                                            setTasks(newTasks);
+                                            setTaskTitles(newTaskTitles);
+                                            setScreens(newScreens);
+                                        }}
+                                    />
                                 </View>
                                 <Divider />
                             </TouchableOpacity>
@@ -360,11 +383,6 @@ export default function lessonForm() {
                 <StandardButton
                     title="Save"
                     onPress={() => {
-                        const [valid, message] = checkMinInfo();
-                        if (!valid) {
-                            alert(message);
-                            return;
-                        }
                         updateLessonStore({
                             description: "",
                             id: "",
@@ -373,6 +391,12 @@ export default function lessonForm() {
                             orderIndex: 0,
                             title: title
                         }, tasks, screens);
+                        // console.log("New lesson screens state: ", newLessonStore.getState().newLesson.screens);
+                        const [valid, message] = checkMinInfo();
+                        if (!valid) {
+                            alert(message);
+                            return;
+                        }
                         saveToBackend(addLesson, addTask, addScreen);
                         router.back();
                     }}

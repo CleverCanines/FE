@@ -15,7 +15,6 @@ function updateLessonStore(lesson: Lesson, tasks: Task[], screens: Screen[][]) {
     newLessonStore.dispatch(setLesson(lesson));
     newLessonStore.dispatch(setTasks(tasks));
     newLessonStore.dispatch(setScreens(screens));
-    console.log("newLessonStore.getState().newLesson: ", newLessonStore.getState().newLesson);
 }
 
 export default function TaskModal() {
@@ -97,11 +96,15 @@ export default function TaskModal() {
                             const newScreens = [...newLessonStore.getState().newLesson.screens];
                             newTasks[taskIndex] = task;
                             newScreens[taskIndex] = screens;
+                            // console.log("NewTasks: ", newTasks);
+                            // console.log("NewScreens: ", newScreens);
                             updateLessonStore(
                                 newLessonStore.getState().newLesson.lessonInfo, 
                                 newTasks, 
                                 newScreens
                             );
+                            // console.log("newLessonStore.getState().newLesson.screens: ", newLessonStore.getState().newLesson.screens);
+                            // console.log("newLessonStore.getState().newLesson.tasks: ", newLessonStore.getState().newLesson.tasks);
                             router.back();
                         }}
                     />
