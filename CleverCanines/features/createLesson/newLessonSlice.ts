@@ -24,7 +24,7 @@ const initialTask: Task = {
 
 const initialScreen: Screen = {
     orderIndex: 0,
-    title: "Screen 1",
+    title: "Page 1",
     text: "",
     videoUrl: "",
     imageUrl: "",

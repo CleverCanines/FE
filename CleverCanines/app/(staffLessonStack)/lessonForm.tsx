@@ -135,10 +135,10 @@ function checkMinInfo(): [boolean, string] {
     if (tasks.length === 0) { return [false, "Lesson has no tasks"]; }
     for (let i = 0; i < tasks.length; i++) {
         if (tasks[i].title === "") { return [false, `Task ${i + 1} is missing a title`]; }
-        if (screens[i].length === 0) { return [false, `Task ${i + 1} has no screens`]; }
+        if (screens[i].length === 0) { return [false, `Task ${i + 1} has no pages`]; }
         for (let j = 0; j < screens[i].length; j++) {
-            if (screens[i][j].title === "") { return [false, `Task ${i + 1} has a screen with no title`]; }
-            if (screens[i][j].text === "") { return [false, `Task ${i + 1} has a screen with no text`]; }
+            if (screens[i][j].title === "") { return [false, `Task ${i + 1} has a page with no title`]; }
+            if (screens[i][j].text === "") { return [false, `Task ${i + 1} has a page with no text`]; }
         }
     }
     return [true, ""];

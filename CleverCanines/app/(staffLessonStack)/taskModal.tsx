@@ -147,7 +147,7 @@ export default function TaskModal() {
                         >
                             <View style={styles.textRow}>
                                 <TextInput
-                                    label={"Screen Title"}
+                                    label={"Page Title"}
                                     value={screenTitles[index]}
                                     onChangeText={(text: string) => {
                                         handleScreenTitleChange(text, index);
@@ -161,7 +161,7 @@ export default function TaskModal() {
                             </View>
                             <View style={styles.textRow}>
                                 <TextInput
-                                    label={"Screen Text"}
+                                    label={"Page Text"}
                                     value={screenTexts[index]}
                                     onChangeText={(text) => {
                                         handleScreenTextChange(text, index);
@@ -180,7 +180,7 @@ export default function TaskModal() {
                             </View>
                             <View style={styles.textRow}>
                                 <TextInput
-                                    label={"Screen Image URL"}
+                                    label={"Page Image URL"}
                                     value={screenImageUrls[index]}
                                     onChangeText={(imageUrl) => {
                                         handleScreenImageUrlChange(imageUrl, index);
@@ -198,7 +198,7 @@ export default function TaskModal() {
                             </View>
                             <View style={styles.textRow}>
                                 <TextInput
-                                    label={"Screen Video URL"}
+                                    label={"Page Video URL"}
                                     value={screenVideoUrls[index]}
                                     onChangeText={(videoUrl) => {
                                         handleScreenVideoUrlChange(videoUrl, index);
@@ -251,7 +251,7 @@ export default function TaskModal() {
                                 const newScreens = [...screens];
                                 newScreens.push({
                                     orderIndex: screens.length,
-                                    title: "Screen " + (screens.length + 1),
+                                    title: "Page " + (screens.length + 1),
                                     text: "",
                                     videoUrl: "",
                                     imageUrl: "",
@@ -260,7 +260,7 @@ export default function TaskModal() {
                                 });
                                 setScreens(newScreens);
                                 const newTitles = [...screenTitles];
-                                newTitles.push("Screen " + (screens.length + 1));
+                                newTitles.push("Page " + (screens.length + 1));
                                 setScreenTitles(newTitles);
                                 const newTexts = [...screenTexts];
                                 newTexts.push("");
